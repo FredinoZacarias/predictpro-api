@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 
 // Cache de previsões para não gastar quota
 const predCache = new Map();
@@ -25,14 +25,14 @@ Responde APENAS com:
 
 Sê directo. Sem introduções. Sem "claro que" ou outros enchimentos.`;
 
-  const res = await fetch(GROQ_API_URL, {
+  const res = await fetch(OPENAI_API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
+      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
     },
     body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
+      model: "gpt-4o-mini",
       max_tokens: 250,
       messages: [{ role: "user", content: prompt }]
     })
@@ -40,7 +40,7 @@ Sê directo. Sem introduções. Sem "claro que" ou outros enchimentos.`;
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Groq API erro ${res.status}: ${err}`);
+    throw new Error(`OpenAI erro ${res.status}: ${err}`);
   }
 
   const json = await res.json();
@@ -52,4 +52,4 @@ Sê directo. Sem introduções. Sem "claro que" ou outros enchimentos.`;
 
   return text;
     }
-    
+      
