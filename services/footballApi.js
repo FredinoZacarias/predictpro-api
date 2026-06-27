@@ -1,10 +1,11 @@
 // =============================================
-// Football-Data.org — API gratuita
-// Regista em https://www.football-data.org/
-// e coloca a API key no .env como FOOTBALL_API_KEY
+// API-Football (api-sports.io)
+// Regista em https://www.api-football.com
+// Coloca a chave no .env como FOOTBALL_API_KEY
+// Plano grátis: 100 req/dia
 // =============================================
 
-const BASE_URL = "https://api.football-data.org/v4";
+const BASE_URL = "https://v3.football.api-sports.io";
 const API_KEY  = process.env.FOOTBALL_API_KEY;
 
 // Cache simples em memória (evita gastar quota)
@@ -20,12 +21,11 @@ export async function getGames() {
 
   const today = getTodayStr();
 
-  const res = await fetch(
-    `${BASE_URL}/matches?dateFrom=${today}&dateTo=${today}&status=SCHEDULED,LIVE`,
-    {
-      headers: { "X-Auth-Token": API_KEY }
+  const res = await fetch(`${BASE_URL}/fixtures?date=${today}`, {
+    headers: {
+      "x-apisports-key": API_KEY
     }
-  );
+  });
 
   if (!res.ok) {
     const txt = await res.text();
@@ -33,17 +33,24 @@ export async function getGames() {
   }
 
   const json = await res.json();
-  const matches = json.matches || [];
+  const fixtures = json.response || [];
 
-  // Normalizar dados relevantes
-  const games = matches.slice(0, 8).map(m => ({
-    id:          m.id,
-    homeTeam:    m.homeTeam.name,
-    awayTeam:    m.awayTeam.name,
-    competition: m.competition.name,
-    utcDate:     m.utcDate,
-    status:      m.status,
-    score:       m.score
+  if (!fixtures.length) {
+    return [];
+  }
+
+  // Normalizar dados — pegar só os primeiros 8 jogos
+  const games = fixtures.slice(0, 8).map(f => ({
+    id:          f.fixture.id,
+    homeTeam:    f.teams.home.name,
+    awayTeam:    f.teams.away.name,
+    competition: f.league.name,
+    utcDate:     f.fixture.date,
+    status:      f.fixture.status.short,
+    score: {
+      home: f.goals.home,
+      away: f.goals.away
+    }
   }));
 
   // Guardar cache
@@ -54,5 +61,4 @@ export async function getGames() {
 
 function getTodayStr() {
   return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-    }
-    
+}
